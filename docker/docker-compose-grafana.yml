@@ -1,0 +1,31 @@
+services:
+    prometheus:
+        image: prom/prometheus:v2.47.0
+        container_name: ${PROMETHEUS_CONTAINER_NAME}
+        hostname: ${PROMETHEUS_CONTAINER_NAME}
+        user: "0"
+        ports:
+        - ${PROMETHEUS_PORT}:9090
+        volumes:
+        - ./grafana/prometheus.yaml:/prometheus.yaml
+        command: "--config.file=/prometheus.yaml"
+        # restart: always
+
+    grafana:
+        image: grafana/grafana:10.2.4-ubuntu
+        container_name: ${GRAFANA_CONTAINER_NAME}
+        hostname: ${GRAFANA_CONTAINER_NAME}
+        ports:
+        - ${GRAFANA_PORT}:3000
+        volumes:
+        - ./grafana/config/provisioning/datasources/:/etc/grafana/provisioning/datasources/
+        - ./grafana/config/provisioning/dashboards/:/etc/grafana/provisioning/dashboards/
+        - ./grafana/config/grafana/dashboards/:/var/lib/grafana/dashboards/
+        - ./grafana/config/grafana/plugins/:/var/lib/grafana/plugins/
+        # restart: always
+
+
+networks:
+    default:
+        name: dataeng-network
+        external: true
