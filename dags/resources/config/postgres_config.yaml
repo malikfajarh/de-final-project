@@ -1,17 +1,9 @@
 batch_ingestion:
-   - customer
    - product
+   - customer
    - transaction
-
-mini_batch_ingestion:
-   # - click_activity
 
 datamart:
    - resources/sql/silver/dim_customer.sql
    - resources/sql/silver/dim_product.sql
    - resources/sql/silver/fact_transaction.sql
-
-analytic:
-   - resources/sql/gold/transaction_yearly.sql
-   - resources/sql/gold/user_retention.sql
-   - resources/sql/gold/product_market_share.sql
