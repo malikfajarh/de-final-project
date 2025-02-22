@@ -1,44 +1,26 @@
 include .env
-# .PHONY: grafana
 
 help:
 	@echo "## docker-build			- Build Docker Images (amd64) including its inter-container network."
 	@echo "## docker-build-arm		- Build Docker Images (arm64) including its inter-container network."
 	@echo "## postgres			- Run a Postgres container  "
 	@echo "## spark			- Run a Spark cluster, rebuild the postgres container, then create the destination tables "
-	@echo "## jupyter			- Spinup jupyter notebook for testing and validation purposes."
 	@echo "## airflow			- Spinup airflow scheduler and webserver."
 	@echo "## kafka			- Spinup kafka cluster (Kafka+Zookeeper)."
-	@echo "## datahub			- Spinup datahub instances."
 	@echo "## metabase			- Spinup metabase instance."
 	@echo "## clean			- Cleanup all running containers related to the challenge."
 
-docker-build-slim:
-	@chmod 777 logs/
-	@chmod 777 notebooks/
-	@docker network inspect dataeng-network >/dev/null 2>&1 || docker network create dataeng-network
-	@docker build -t dataeng-dibimbing/jupyter -f ./docker/Dockerfile.jupyter .
-
-docker-build-slim-windows:
-	@docker build -t dataeng-dibimbing/jupyter -f ./docker/Dockerfile.jupyter .
 
 docker-build:
 	@echo '__________________________________________________________'
 	@echo 'Building Docker Images ...'
 	@echo '__________________________________________________________'
 	@chmod 777 logs/
-	@chmod 777 notebooks/
 	@docker network inspect dataeng-network >/dev/null 2>&1 || docker network create dataeng-network
 	@echo '__________________________________________________________'
 	@docker build -t dataeng-dibimbing/spark -f ./docker/Dockerfile.spark .
 	@echo '__________________________________________________________'
 	@docker build -t dataeng-dibimbing/airflow -f ./docker/Dockerfile.airflow .
-	@echo '__________________________________________________________'
-	@docker build -t dataeng-dibimbing/jupyter -f ./docker/Dockerfile.jupyter .
-	@echo '__________________________________________________________'
-	# @docker build -t dataeng-dibimbing/grafana -f ./docker/Dockerfile.grafana .
-	# @echo '__________________________________________________________'
-	# @docker build -t dataeng-dibimbing/prometheus -f ./docker/Dockerfile.prometheus .
 	@echo '==========================================================='
 
 docker-build-windows:
@@ -48,8 +30,6 @@ docker-build-windows:
 	@docker build -t dataeng-dibimbing/spark -f ./docker/Dockerfile.spark .
 	@echo '__________________________________________________________'
 	@docker build -t dataeng-dibimbing/airflow -f ./docker/Dockerfile.airflow .
-	@echo '__________________________________________________________'
-	@docker build -t dataeng-dibimbing/jupyter -f ./docker/Dockerfile.jupyter .
 	@echo '==========================================================='
 
 
@@ -62,19 +42,6 @@ docker-build-arm:
 	@docker build -t dataeng-dibimbing/spark -f ./docker/Dockerfile.spark .
 	@echo '__________________________________________________________'
 	@docker build -t dataeng-dibimbing/airflow -f ./docker/Dockerfile.airflow-arm .
-	@echo '__________________________________________________________'
-	@docker build -t dataeng-dibimbing/jupyter -f ./docker/Dockerfile.jupyter .
-	@echo '==========================================================='
-
-jupyter:
-	@echo '__________________________________________________________'
-	@echo 'Creating Jupyter Notebook Cluster at http://localhost:${JUPYTER_PORT} ...'
-	@echo '__________________________________________________________'
-	@docker compose -f ./docker/docker-compose-jupyter.yml --env-file .env up -d
-	@echo 'Created...'
-	@echo 'Processing token...'
-	@sleep 20
-	@docker logs ${JUPYTER_CONTAINER_NAME} 2>&1 | grep '\?token\=' -m 1 | cut -d '=' -f2
 	@echo '==========================================================='
 
 spark:
@@ -84,20 +51,6 @@ spark:
 	@docker compose -f ./docker/docker-compose-spark.yml --env-file .env up -d
 	@echo '==========================================================='
 
-spark-submit-test:
-	@docker exec ${SPARK_WORKER_CONTAINER_NAME}-1 \
-		spark-submit \
-		--master spark://${SPARK_MASTER_HOST_NAME}:${SPARK_MASTER_PORT} \
-		/spark-scripts/spark-example.py
-
-spark-submit-airflow-test:
-	@docker exec ${AIRFLOW_WEBSERVER_CONTAINER_NAME} \
-		spark-submit \
-		--master spark://${SPARK_MASTER_HOST_NAME}:${SPARK_MASTER_PORT} \
-		--conf "spark.standalone.submit.waitAppCompletion=false" \
-		--conf "spark.ui.enabled=false" \
-		/spark-scripts/spark-example.py
-
 airflow:
 	@echo '__________________________________________________________'
 	@echo 'Creating Airflow Instance ...'
@@ -105,7 +58,7 @@ airflow:
 	@docker compose -f ./docker/docker-compose-airflow.yml --env-file .env up
 	@echo '==========================================================='
 
-postgres: postgres-create # postgres-create-warehouse postgres-create-table postgres-ingest-csv
+postgres: postgres-create postgres-create-warehouse create-stream-table
 
 postgres-create:
 	@docker compose -f ./docker/docker-compose-postgres.yml --env-file .env up -d
@@ -119,35 +72,22 @@ postgres-create:
 	@sleep 5
 	@echo '==========================================================='
 
-# postgres-create-table:
-# 	@echo '__________________________________________________________'
-# 	@echo 'Creating tables...'
-# 	@echo '_________________________________________'
-# 	@docker exec -it ${POSTGRES_CONTAINER_NAME} psql -U ${POSTGRES_USER} -d ${POSTGRES_DW_DB} -f sql/ddl-retail.sql
-# 	@echo '==========================================================='
-
-# postgres-ingest-csv:
-# 	@echo '__________________________________________________________'
-# 	@echo 'Ingesting CSV...'
-# 	@echo '_________________________________________'
-# 	@docker exec -it ${POSTGRES_CONTAINER_NAME} psql -U ${POSTGRES_USER} -d ${POSTGRES_DW_DB} -f sql/ingest-retail.sql
-# 	@echo '==========================================================='
-
-# postgres-create-warehouse:
-# 	@echo '__________________________________________________________'
-# 	@echo 'Creating Warehouse DB...'
-# 	@echo '_________________________________________'
-# 	@docker exec -it ${POSTGRES_CONTAINER_NAME} psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f sql/warehouse-ddl.sql
-# 	@echo '==========================================================='
-
-grafana: 
+create-stream-table:
 	@echo '__________________________________________________________'
-	@echo 'Creating Grafana Cluster ...'
-	@echo '__________________________________________________________'
-	@docker compose -f ./docker/docker-compose-grafana.yml --env-file .env up -d
-	@echo '__________________________________________________________'
-	@echo 'Grafana container created at port ${GRAFANA_PORT}...'
+	@echo 'Creating tables...'
+	@sleep 5
+	@echo '_________________________________________'
+	@docker exec -it ${POSTGRES_CONTAINER_NAME} psql -U ${POSTGRES_USER} -d ${POSTGRES_DW_DB} -f sql/click_activity.sql
 	@echo '==========================================================='
+
+postgres-create-warehouse:
+	@echo '__________________________________________________________'
+	@echo 'Creating Warehouse DB...'
+	@sleep 5
+	@echo '_________________________________________'
+	@docker exec -it ${POSTGRES_CONTAINER_NAME} psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f sql/warehouse_ddl.sql
+	@echo '==========================================================='
+
 
 kafka: kafka-create
 
@@ -160,53 +100,35 @@ kafka-create:
 	@sleep 20
 	@echo '==========================================================='
 
-kafka-create-ecommerce-topic:
+kafka-create-topic:
 	@docker exec ${KAFKA_CONTAINER_NAME} \
 		kafka-topics.sh --create \
-		--partitions 2 \
+		--partitions 1 \
 		--replication-factor ${KAFKA_REPLICATION} \
 		--bootstrap-server localhost:9092 \
 		--topic ${KAFKA_TOPIC_NAME}
 
-kafka-create-topic:
+kafka-delete-topic:
 	@docker exec ${KAFKA_CONTAINER_NAME} \
-		kafka-topics.sh --create \
-		--partitions ${partition} \
-		--replication-factor ${KAFKA_REPLICATION} \
-		--bootstrap-server localhost:9092 \
-		--topic ${topic}
+		kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic ${KAFKA_TOPIC_NAME}
 
-spark-produce:
+kafka-produce: kafka-delete-topic kafka-create-topic
 	@echo '__________________________________________________________'
-	@echo 'Producing fake events ...'
+	@echo 'Producing click activity events ...'
 	@echo '__________________________________________________________'
 	@docker exec ${SPARK_WORKER_CONTAINER_NAME}-1 \
 		python \
-		/scripts/event_producer.py
+		/kafka/event_producer.py
 
-spark-consume:
+kafka-consume:
 	@echo '__________________________________________________________'
-	@echo 'Consuming fake events ...'
+	@echo 'Consuming click activity events to Postgres ...'
 	@echo '__________________________________________________________'
 	@docker exec ${SPARK_WORKER_CONTAINER_NAME}-1 \
-		spark-submit \
-		/spark-scripts/spark-event-consumer.py
+		python \
+		/kafka/event_consumer.py
 
-datahub-create:
-	@echo '__________________________________________________________'
-	@echo 'Creating Datahub Instance ...'
-	@echo '__________________________________________________________'
-	@docker compose -f ./docker/docker-compose-datahub.yml --env-file .env up
-	@echo '==========================================================='
-
-datahub-ingest:
-	@echo '__________________________________________________________'
-	@echo 'Ingesting Data to Datahub ...'
-	@echo '__________________________________________________________'
-	@datahub ingest -c ./datahub/sample.yaml --dry-run
-	@echo '==========================================================='
-
-metabase: postgres-create-warehouse
+metabase: 
 	@echo '__________________________________________________________'
 	@echo 'Creating Metabase Instance ...'
 	@echo '__________________________________________________________'
@@ -215,7 +137,6 @@ metabase: postgres-create-warehouse
 
 clean:
 	@bash ./scripts/goodnight.sh
-
 
 postgres-bash:
 	@docker exec -it dataeng-postgres bash

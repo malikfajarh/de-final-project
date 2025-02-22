@@ -1,6 +1,3 @@
 logs/*
 !logs/.gitkeep
-notebooks/*
-!notebooks/*.ipynb
-# dags/*
-# !dags/*.py
+data/ecommerce*
