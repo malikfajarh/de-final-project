@@ -17,7 +17,8 @@ services:
             - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://${KAFKA_HOST}:9092
             - KAFKA_CFG_NODE_ID=1
         volumes:
-            - ../scripts:/scripts
+            # - ../scripts:/scripts
+            - ../kafka:/kafka
 
     kafka-ui:
         image: provectuslabs/kafka-ui:v0.7.0
@@ -28,7 +29,7 @@ services:
             - "8083:8080"
         restart: "no"
         environment:
-            - KAFKA_CLUSTERS_0_NAME=local #kalo mau ganti nama cluster
+            - KAFKA_CLUSTERS_0_NAME=local 
             - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=${KAFKA_HOST}:9092
             - KAFKA_CLUSTERS_0_KSQLDBSERVER=http://${KSQL_HOST}:8088
         

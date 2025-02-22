@@ -11,6 +11,8 @@ services:
             - MB_DB_USER=${POSTGRES_USER}
             - MB_DB_PASS=${POSTGRES_PASSWORD}
             - MB_DB_PORT=5432
+            - MB_USER_EMAIL=${METABASE_USER_EMAIL}
+            - MB_USER_PASSWORD=${METABASE_USER_PASSWORD}
         restart: always
 
     metabase-setup:
