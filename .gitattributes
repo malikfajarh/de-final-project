@@ -1,2 +1,1 @@
 dags/resources/csv/transaction.csv filter=lfs diff=lfs merge=lfs -text
-kafka/csv/click_activity.csv filter=lfs diff=lfs merge=lfs -text
