@@ -1,29 +1,30 @@
 # Data Engineering Final Project
 Fashion E-commerce analytical and monitoring platform with data processing batch and stream from csv files
-
+<br />
+<br />
 
 How to run:
 1. Clone This Repo.
 2. Run `make docker-build` for x86 user, or `make docker-build-arm` for arm chip user.
 
 3. ETL Batch
-- make postgres
-- make airflow
+  - `make postgres`
+  - `make airflow`
+  
 
 4. Streaming
-recommended to stop the airflow container first for memorry efficiency!
-- make kafka
-- make spark
-- make kafka-create-topic
-
-use 2 terminal for produce and consume messages!
-- make kafka-produce -> default is 100 for producing the messages and send to topic
-- make kafka-consume -> start kafka consumer listening to topic with timeout 10 seconds if no new data in topic
+ - recommended to stop the airflow container first for memorry efficiency!
+  - `make kafka`
+  - `make spark`
+  - `make kafka-create-topic`
+  - use 2 terminal for produce and consume messages!
+  - `make kafka-produce` -> default is 100 for producing the messages and send to topic
+  - `make kafka-consume` -> start kafka consumer listening to topic with timeout 10 seconds if no new data in topic
 
 5. visualize with metabase
-make sure files in scripts/metabase.sh is LF format
-make sure postgres container is running and loaded with data from ETL and stream
-- make metabase
+  - make sure files in scripts/metabase.sh is LF format
+  - make sure postgres container is running and loaded with data from ETL and stream
+  - `make metabase`
 
 ---
 ```
