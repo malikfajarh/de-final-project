@@ -1,0 +1,4 @@
+DUE TO GITHUB AND GIT LFS LIMITATION FOR LARGE CSV, PLEASE DOWNLOAD CSV FILE BELOW IN THE DRIVE BELOW!
+
+https://drive.google.com/file/d/1LOEamVEBVna4OpYo1871SagPzGA3GQE_/view?usp=sharing 
+Extract and place the click activity csv in the same directory as this txt directory!
