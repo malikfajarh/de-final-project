@@ -1,12 +1,16 @@
-# Data Engineering Final Project
-Fashion E-commerce analytical and monitoring platform with data processing batch and stream from csv files
+# Fashion E-commerce Analytical and Monitoring Platform 
+This platform is designed to integrate CSV format files by combining batch and streaming processing to create a single source of truth. The goal of the platform is to provide insight into customer transactions, product performance, business growth, and customer activity to support more accurate data analysis and more strategic decision-making.
 <br />
 <br />
 
-How to run:
-1. make sure installed git lfs by `git lfs install` for pulling large files
-2. Clone This Repo.
-3. Run `make docker-build` for x86 user, or `make docker-build-arm` for arm chip user.
+![Image](https://github.com/user-attachments/assets/70a73178-7fa0-45be-9e71-5bae8b46d286)
+<br />
+
+
+# How to run:
+1. Clone This Repo
+2. Please download [transaction.csv](dags/resources/csv/download_transaction_csv.txt) and [click_activity.csv](kafka/csv/download_click_activity_csv.txt) follow the txt guidance
+3. Run `make docker-build` for x86 user, or `make docker-build-arm` for arm chip user
 
 4. ETL Batch
   - `make postgres`
